@@ -1,0 +1,64 @@
+%{
+
+#import "y.tab.h"
+#include <stdio.h>
+
+    
+#undef YY_INPUT
+#define YY_INPUT(b,r,s) (r = yyYYINPUT(b,s))
+    
+extern void sendFailedMessage(char *exceptionMsg);
+
+
+enum {
+    START_STATE=0,
+    S1,
+    S2,
+    S3,
+    FINAL
+};
+    
+int STATE=START_STATE;
+
+
+%}
+
+%%
+
+solid[.]* { STATE=S1; return solid; }
+
+facet { if ( STATE==S1 ) { STATE=S2; return facet; } }
+
+normal { if ( STATE==S2 ) { return fnormal; } }
+
+outer" "loop { if( STATE==S2 ) { STATE=S3; return outerloop; } }
+
+vertex { if( STATE==S3 ) { return vertex; } }
+
+endloop { if(STATE==S3) { STATE=S2; return endloop; } }
+
+endfacet { if(STATE==S2) { STATE=S1; return endfacet; } }
+
+endsolid[.]* { if(STATE==S1) { printf("yes"); STATE=START_STATE; return endsolid; } }
+
+(-)?[0-9]+\.[0-9]+ { if ( STATE==S3 ) { yylval.vertexFloatValue=strtof(yytext,NULL); return floatnum; } }
+
+[0-9]+ { return floatnum; }
+
+[\n]* { return newline; } 
+
+
+%%
+
+void yyerror(char* s) {
+    sendFailedMessage(s);
+}
+
+
+int yywrap() {
+    return -1;
+}
+
+void yyreset_state() {
+    BEGIN(INITIAL);
+}

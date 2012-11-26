@@ -1,0 +1,104 @@
+%{
+    #import "STLPrimitives.h"
+    #include <stdlib.h>
+
+    extern void yyerror(char* s);
+    extern int yylex();
+    extern int yyYYINPUT(char* theBuffer,int maxSize);
+
+    extern void sendParsedData(STLData * );
+
+    Vertex *vertices;
+    Normal *normals;
+    int *indices;
+    
+    long verticesHandle=0,normalsHandle=0,indicesHandle=0;
+    
+    void addNormal(float x,float y,float z);
+    void addVertex(float x,float y,float z);
+    
+    #undef YYMAXDEPTH
+    #define YYMAXDEPTH 900000
+    
+%}
+
+%union {
+    float vertexFloatValue;
+}
+
+%type<vertexthreed> VERTEX
+
+%token solid facet fnormal newline outerloop vertex endloop endfacet endsolid waste
+
+%token<vertexFloatValue> floatnum
+
+%%
+
+
+SOLID_DESC: solid newline FACET_DESCS endsolid {    STLData *stlData=(STLData *)malloc(sizeof(STLData *));
+                                                    stlData->vertices=vertices;
+                                                    stlData->indices=indices;
+                                                    stlData->normals=normals;
+                                                    stlData->indicesHandle=indicesHandle;
+                                                    stlData->verticesHandle=verticesHandle;
+                                                    stlData->normalsHandle=normalsHandle;
+                                                    sendParsedData(stlData);
+                                                    return 0;
+                                                };
+
+FACET_DESCS: FACET_DESCS newline FACET_DESCS {}
+|FACET_DESC {}
+|;
+
+FACET_DESC: facet fnormal floatnum floatnum floatnum newline LOOP_DESC newline endfacet { addNormal($3,$4,$5); };
+
+LOOP_DESC: outerloop newline VERTEX_DESC newline endloop {};
+
+VERTEX_DESC: VERTEX newline VERTEX newline VERTEX { };
+
+
+VERTEX: vertex floatnum floatnum floatnum { addVertex($2,$3,$4); };
+
+
+
+%%
+
+long getIndexOfVertex(float x, float y, float z) {
+    long index=0;
+    Vertex *currentVertex=NULL;
+    while(index<verticesHandle) {
+        currentVertex=&vertices[index];
+        if( currentVertex->x==x && currentVertex->y==y && currentVertex->z==z ) {
+            return index;
+        }
+        index++;
+    }
+    return -1;
+}
+
+
+void addNormal(float x,float y,float z) {
+    normals=(Normal *)realloc(normals,(normalsHandle+1)*sizeof(Normal));
+    Normal *currentNormal=&normals[normalsHandle];
+    currentNormal->x=x;
+    currentNormal->y=y;
+    currentNormal->z=z;
+    normalsHandle++;
+}
+
+void addVertex(float x,float y,float z) {
+    long index = getIndexOfVertex(x,y,z);
+    if(index == -1) {
+        vertices=(Vertex *)realloc(vertices,(verticesHandle+1)*sizeof(Vertex));
+        Vertex *currentVertex=&vertices[verticesHandle];
+        currentVertex->x=x;
+        currentVertex->y=y;
+        currentVertex->z=z;
+        index=verticesHandle;
+        verticesHandle++;
+    }
+    indices=(int *)realloc(indices,(indicesHandle+1)*sizeof(int));
+    indices[indicesHandle]=index;
+    indicesHandle++;
+}
+
