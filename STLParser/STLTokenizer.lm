@@ -39,13 +39,13 @@ endloop { if(STATE==S3) { STATE=S2; return endloop; } }
 
 endfacet { if(STATE==S2) { STATE=S1; return endfacet; } }
 
-endsolid[.]* { if(STATE==S1) { printf("yes"); STATE=START_STATE; return endsolid; } }
+endsolid[.]* { if(STATE==S1) { STATE=START_STATE; return endsolid; } }
 
-(-)?[0-9]+\.[0-9]+ { if ( STATE==S3 ) { yylval.vertexFloatValue=strtof(yytext,NULL); return floatnum; } }
+[-+]?[0-9]+\.[0-9]+([eE][+-]?[0-9]+)? { if ( STATE==S3 || STATE==S2) { yylval.vertexFloatValue=strtof(yytext,NULL); return floatnum; } }
 
 [0-9]+ { return floatnum; }
 
-[\n]* { return newline; } 
+(\r|\n|\r\n)* { return newline; }
 
 
 %%

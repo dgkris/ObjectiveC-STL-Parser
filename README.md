@@ -21,4 +21,5 @@ Objective C Parser for STL Files.
 
 4. Make sure you release the parser instance of STLParser class in the dealloc method.
 
+PS: Works only with ASCII STL files. 
 
