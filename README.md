@@ -4,7 +4,11 @@ ObjectiveC-STL-Parser
 Objective C Parser for STL Files. 
 
 1. Add the following files to your project.
-	STLParser.h	STLParser.m	STLParser.ym	STLPrimitives.h	STLTokenizer.lm
+	STLParser.h
+	STLParser.m
+	STLParser.ym
+	STLPrimitives.h
+	STLTokenizer.lm
 2. To parse the stl file call the parseFileWithFilePath method of STLParser class. To receive parsed data/syntax error exception your class should be a delegate of STLParser class. To achieve this you can use STLParserDelegate protocol and then you should add your instance to the parserDelegate observer array as in (B). Now in a background thread you may call the parseFileWithFilePath on the parser instance with the full path of the stl file as argument.
 
     Sample usage :
@@ -21,5 +25,5 @@ Objective C Parser for STL Files.
 
 4. Make sure you release the parser instance of STLParser class in the dealloc method.
 
-PS: Works only with ASCII STL files. 
+PS: Works only with ASCII STL files. If you are using ARC project, then use the -fno-obc-arc compiler flag for STLParser.m
 
